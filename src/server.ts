@@ -12,12 +12,13 @@ dbconnect();
 
 const app = express();
 app.use(express.json()); // Middleware to parse JSON request bodies
-app.use(cors(
-    {
-        credentials: true,
-        origin: ["http://localhost:4200"]
-    }
-));
+app.use(cors({
+  credentials: true,
+  origin: [
+    "http://localhost:4200", // local dev
+    "https://workfah-frontend.onrender.com" // your deployed frontend
+  ]
+}));
 
 // app.use("/api/foods", foodRouter)
 // app.use("/api/users", userRouter)
