@@ -1,11 +1,11 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import express, { json } from 'express';
 import cors from 'cors';
 import listingRoutes from './routers/listing';
 import foodRouter from './routers/food.router'
 import userRouter from './routers/user.router';
-import dotenv from 'dotenv';
 import { authMiddleware } from './authmidddleware';
-dotenv.config();
 import { dbconnect } from './configs/database.config';
 
 dbconnect();
