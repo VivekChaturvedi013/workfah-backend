@@ -86,17 +86,20 @@ router.post("/request", authMiddleware, async (req: Request, res: Response) => {
   try {
     const { listingId, date, from, to } = req.body;
     const guestId = (req as any).user.userId;
+    const guestEmail = (req as any).user.email;
 
     const booking = new Booking({
       listingId,
       guestId,
-      
+      guestEmail,
       date,
       from,
       to,
       status: "pending"
     });
     await booking.save();
+
+    console.log("New booking request:", booking);
 
     res.status(201).send({ message: "Booking request created", booking });
   } catch (err) {
