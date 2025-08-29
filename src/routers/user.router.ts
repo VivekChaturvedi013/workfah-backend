@@ -37,7 +37,14 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
 
     console.log("Token generated");
 
-    res.status(201).send({ token, user: { name: user.name, email: user.email } });
+    res.status(201).send({
+      token,
+      user: {
+        name: user.name,
+        email: user.email,
+        roles: user.roles, // ✅ include roles
+      },
+    });
 
   } catch (error: any) {
     console.error("Register error:", error);
@@ -75,7 +82,14 @@ console.log("JWT_SECRET:", process.env.JWT_SECRET);
       { expiresIn: '1h' }
     );
 
-    res.send({ token, user: { name: user.name, email: user.email } });
+    res.status(201).send({
+      token,
+      user: {
+        name: user.name,
+        email: user.email,
+        roles: user.roles, // ✅ include roles
+      },
+    });
   } catch (error) {
     res.status(500).send({ message: 'Internal server error' });
   }

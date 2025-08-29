@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 
 const listingSchema = new mongoose.Schema({
+  host: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
   pincode: String,
   address: String,
   description: String,

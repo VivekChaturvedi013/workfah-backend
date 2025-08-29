@@ -7,6 +7,7 @@ import foodRouter from './routers/food.router'
 import userRouter from './routers/user.router';
 import { authMiddleware } from './authmidddleware';
 import { dbconnect } from './configs/database.config';
+import bookingRouter from './routers/booking.router';
 
 dbconnect();
 
@@ -24,6 +25,7 @@ app.use(cors({
 // app.use("/api/users", userRouter)
 app.use("/api/listings",listingRoutes);
 app.use('/api/users', userRouter);
+app.use("/api/bookings", bookingRouter);
 app.get('/api/protected', authMiddleware, (req, res) => {
   res.send({ message: 'You are authorized', user: (req as any).user });
 });
