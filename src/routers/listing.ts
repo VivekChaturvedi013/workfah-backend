@@ -14,36 +14,49 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
   try {
     const { pincode, address, description, availableHours } = req.body;
     const user = (req as any).user;
+
     console.log('Authenticated user:', user);
+
+    // ✅ Ensure pincode is stored consistently as string (safer for Indian pincodes)
     const newListing = new Listings({
-      host: (req as any).user.userId, // ✅ userId comes from token
-      hostEmail: user.email,   // 🔥 storing host email
-      pincode,
+      host: user.userId,         // userId comes from token
+      hostEmail: user.email,     // storing host email
+      pincode: String(pincode),  // always store as string
       address,
       description,
       availableHours,
       image: req.file?.buffer
     });
 
-    console.log('New Listing:', newListing); // 🔥 log the new listing object
-    
+    // ✅ Save the listing in DB
+    await newListing.save();
+    console.log('Saved Listing:', newListing);
+
+    // ✅ Update user role to 'host' if not already
     const dbUser = await User.findById(user.userId);
     if (dbUser && !dbUser.roles.includes("host")) {
       dbUser.roles.push("host");
       await dbUser.save();
     }
 
-    // Return the updated user object (or just roles)
+    // ✅ Respond with saved listing + updated user roles
     res.status(201).json({
       message: "Listing saved",
-      listing: newListing,
+      listing: {
+        ...newListing.toObject(),
+        image: newListing.image
+          ? `data:image/png;base64,${newListing.image.toString('base64')}`
+          : undefined,
+      },
       user: {
-        name: user.name,
-        email: user.email,
+        name: dbUser?.name,
+        email: dbUser?.email,
         roles: dbUser?.roles,
       },
     });
+
   } catch (err) {
+    console.error("Error saving listing:", err);
     res.status(500).send({ error: err instanceof Error ? err.message : 'Unknown error' });
   }
 });
