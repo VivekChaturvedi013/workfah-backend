@@ -2,6 +2,8 @@ import express, { Request, Response } from "express";
 import { Booking } from "../models/Booking";
 import { authMiddleware } from "../authmidddleware";
 import Listings from "../models/Listings";
+import { Buffer } from "buffer";  // make sure this is imported at top
+
 
 
 const router = express.Router();
@@ -39,16 +41,46 @@ router.get("/requests", authMiddleware, async (req: Request, res: Response) => {
     const bookings = await Booking.find()
       .populate({
         path: "listingId",
-        match: { host: hostId },   // ✅ correct field
+        match: { host: hostId }, // ✅ correct field
       })
       .populate("guestId");
 
     // filter out null listings (not owned by this host)
-    const filtered = bookings.filter(b => b.listingId !== null);
+    const filtered = bookings.filter((b) => b.listingId);
+    const response = filtered.map((b) => {
+      const listingDoc = (b.listingId as any).toObject();
+      console.log("Original listing image line 57:", listingDoc.image);
+      if (listingDoc?.image && listingDoc.image.buffer) {
+        // MongoDB Binary case
+        const base64 = listingDoc.image.toString("base64");
+        listingDoc.image = `data:image/png;base64,${base64}`;
+      } else if (listingDoc?.image?.data) {
+        // Mongoose { data, contentType } case
+        const base64 = Buffer.from(listingDoc.image.data).toString("base64");
+        listingDoc.image = `data:${listingDoc.image.contentType};base64,${base64}`;
+      } else if (typeof listingDoc.image === "string") {
+        // Already base64 string
+        listingDoc.image = `data:image/png;base64,${listingDoc.image}`;
+      }
 
-    res.send(filtered);
+      console.log(
+        "Transformed listing image line 58:",
+        typeof listingDoc.image === "string"
+          ? listingDoc.image.substring(0, 100)
+          : listingDoc.image
+      );
+      return {
+        _id: b._id,
+        date: b.date,
+        listingId: listingDoc,
+        guestId: b.guestId,
+        status: b.status,
+      };
+    });
+
+    res.send(response);
   } catch (err) {
-    console.error("Error in /requests:", err);  // ✅ will log actual error now
+    console.error("Error in /requests:", err); // ✅ will log actual error now
     res.status(500).send({ message: "Error fetching requests", error: err });
   }
 });
